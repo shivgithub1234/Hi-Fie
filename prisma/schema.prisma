@@ -1,0 +1,73 @@
+generator client {
+  provider            = "prisma-client"
+  output              = "../generated/prisma"
+  runtime             = "nodejs"
+  moduleFormat        = "esm"
+  importFileExtension = "ts"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id        String    @id @db.Uuid
+  name      String
+  email     String    @unique
+  salt      String
+  hash      String
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  members   Member[]
+  messages  Message[]
+
+  @@map("hi_fie_users")
+}
+
+model Room {
+  code     String    @id @db.VarChar(5)
+  updated  BigInt
+  revision Int       @default(0)
+  members  Member[]
+  messages Message[]
+
+  @@index([updated], map: "hi_fie_rooms_updated")
+  @@map("hi_fie_rooms")
+}
+
+model Member {
+  roomCode String @map("room_code") @db.VarChar(5)
+  userId   String @map("user_id") @db.Uuid
+  name     String
+  seen     BigInt
+  room     Room   @relation(fields: [roomCode], references: [code], onDelete: Cascade, onUpdate: NoAction)
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@id([roomCode, userId])
+  @@index([seen], map: "hi_fie_members_seen")
+  @@map("hi_fie_members")
+}
+
+model Message {
+  sequence BigInt  @id @default(autoincrement())
+  id       String  @unique @db.Uuid
+  roomCode String  @map("room_code") @db.VarChar(5)
+  name     String
+  text     String
+  system   Boolean @default(false)
+  userId   String? @map("user_id") @db.Uuid
+  at       BigInt
+  room     Room    @relation(fields: [roomCode], references: [code], onDelete: Cascade, onUpdate: NoAction)
+  user     User?   @relation(fields: [userId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+
+  @@index([roomCode, sequence(sort: Desc)], map: "hi_fie_messages_room_order")
+  @@map("hi_fie_messages")
+}
+
+model RateLimit {
+  key     String @id
+  count   Int
+  untilMs BigInt @map("until_ms")
+
+  @@index([untilMs], map: "hi_fie_rate_limits_expiration")
+  @@map("hi_fie_rate_limits")
+}

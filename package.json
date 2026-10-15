@@ -1,0 +1,47 @@
+{
+  "name": "hi-fie",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "prisma generate && next dev",
+    "build": "prisma generate && next build",
+    "start": "next start",
+    "test": "tsx --test tests/*.test.ts",
+    "typecheck": "prisma generate && tsc --noEmit",
+    "db:migrate": "tsx scripts/migrate.ts",
+    "db:check": "tsx scripts/check-db.ts",
+    "db:import-json": "tsx scripts/import-json.ts",
+    "test:db": "tsx --test tests/database.test.ts",
+    "postinstall": "prisma generate",
+    "db:generate": "prisma generate",
+    "db:studio": "prisma studio",
+    "db:validate": "prisma validate",
+    "db:network": "tsx scripts/check-network.ts",
+    "setup": "node scripts/setup.mjs",
+    "deploy:check": "tsx scripts/check-deploy-env.ts",
+    "build:vercel": "npm run deploy:check && npm run db:migrate && npm run build"
+  },
+  "dependencies": {
+    "next": "^15.5.0",
+    "next-auth": "^4.24.11",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "pg": "^8.16.3",
+    "@next/env": "^15.5.0",
+    "@prisma/client": "7.10.0",
+    "@prisma/adapter-pg": "7.10.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.0",
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "tsx": "^4.20.0",
+    "@types/pg": "^8.15.5",
+    "prisma": "7.10.0"
+  },
+  "type": "module",
+  "engines": {
+    "node": "22.x"
+  }
+}

@@ -1,20 +1,51 @@
-# hi-fie
+# Hi-Fie
+
+[Live demo](https://hi-fie-siz3.vercel.app/) | [GitHub](https://github.com/shivgithub1234/Hi-Fie)
 
 Real-time rooms with collision-checked five-character codes, NextAuth credentials authentication, five-message join history, join/leave notifications, and heartbeat presence.
 
 The app, API routes, authentication, storage, and tests use TypeScript with strict checking. Database queries use Prisma ORM 7 with the PostgreSQL driver adapter. Models and relationships live in `prisma/schema.prisma`; generated client code goes in ignored `generated/prisma/`. Shared chat types live in `lib/types.ts`; NextAuth session types live in `types/next-auth.d.ts`.
 
+## Features
+
+- Create and join real-time chat rooms using collision-safe five-character codes.
+- View the last five messages when joining, with system notifications for joins and leaves.
+- Track online members through heartbeats and automatically clean up inactive rooms.
+- Sign in securely with NextAuth, server-side session checks, input validation, and shared rate limits.
+- Persist accounts, messages, and room state in PostgreSQL through Prisma.
+- Use a responsive interface with a matching chat-bubble browser icon.
+
+## Tech stack
+
+| Layer | Technology |
+| --- | --- |
+| Application | Next.js App Router, React, TypeScript |
+| Authentication | NextAuth credentials provider |
+| Database | PostgreSQL (Neon), Prisma ORM |
+| Live updates | Server-Sent Events (SSE), heartbeat presence |
+| Styling | Custom responsive CSS |
+| Hosting | Vercel |
+
 ## Run
 
 For an existing checkout, `npm run setup` installs dependencies, generates and validates Prisma Client, checks the connection, migrates, imports any existing `data/chat.json`, and verifies the schema. It stops immediately when a step fails; it does not start the app after a failed migration or import. After setup succeeds, run `npm run dev`. The setup prints its project directory to help distinguish a different or outdated checkout.
 
-Use Node.js 22.12 or later. Keep credentials in `.env.local`; `.env.example` contains placeholders only. If `.env.local` does not exist, copy the example and set `DATABASE_URL` to your PostgreSQL connection URL. Set `NEXTAUTH_SECRET` and `CRON_SECRET` to separate random values (generate with `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`). Keep `NEXTAUTH_URL=http://localhost:3000` for local development.
+Use Node.js 22.12 or later within the 22.x release line. Keep credentials in `.env.local`; `.env.example` contains placeholders only. If `.env.local` does not exist, copy the example and set `DATABASE_URL` to your PostgreSQL connection URL. Set `NEXTAUTH_SECRET` and `CRON_SECRET` to separate random values (generate with `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`). Keep `NEXTAUTH_URL=http://localhost:3000` for local development.
+
+```powershell
+git clone https://github.com/shivgithub1234/Hi-Fie.git
+cd Hi-Fie
+Copy-Item .env.example .env.local
+```
+
+Fill in `.env.local` before running:
 
 ```powershell
 npm install
 npm run db:generate
-npm run db:check
+npm run db:check -- --connection-only
 npm run db:migrate
+npm run db:check
 npm run dev
 ```
 
@@ -34,10 +65,10 @@ To preserve accounts and messages from the old file-based version, stop the old 
 
 ## Deploy to Vercel
 
-Deployment preparation does not publish the app or change your database credentials. The current Neon database can be reused; data already imported locally does not need importing again on Vercel.
+The live app is available at [hi-fie-siz3.vercel.app](https://hi-fie-siz3.vercel.app/). To deploy your own copy, connect the GitHub repository to Vercel. An existing Neon database can be reused; previously imported data does not need importing again.
 
-1. Put the source and `package-lock.json` in a Git repository and import it into Vercel as a **Next.js** project. Use the project root as the Root Directory and Node.js **22.x**. This workspace is not currently initialized as a Git repository.
-2. Add the variables listed in `.env.production.example` to **Project Settings → Environment Variables → Production**. Use your existing pooled Neon `DATABASE_URL`, existing direct `DATABASE_URL_UNPOOLED`, and current `NEXTAUTH_SECRET` and `CRON_SECRET`. Do not copy localhost `NEXTAUTH_URL`; set it to the exact HTTPS production domain shown in Vercel, such as `https://your-project.vercel.app`. The secrets must be different and at least 32 characters. Never paste live values into either example file.
+1. Put the source and `package-lock.json` in a Git repository and import it into Vercel as a **Next.js** project. Use the project root as the Root Directory and Node.js **22.x**.
+2. Add the variables listed in `.env.production.example` to **Project Settings > Environment Variables > Production**. Use your existing pooled Neon `DATABASE_URL`, existing direct `DATABASE_URL_UNPOOLED`, and current `NEXTAUTH_SECRET` and `CRON_SECRET`. Do not copy localhost `NEXTAUTH_URL`; set it to the exact HTTPS production domain shown in Vercel, `https://hi-fie-siz3.vercel.app` for this deployment, or your own production origin for a fork. The secrets must be different and at least 32 characters. Never paste live values into either example file.
 3. Keep preview deployments on a separate database branch. The runtime and migration URLs for each environment must target the same database and branch. A custom migration-role username may differ from the app role. If using `PRISMA_MIGRATION_URL`, it overrides the direct migration URL and must target that same database.
 4. Use the checked-in `vercel.json` defaults: install with **`npm ci`** and build with **`npm run build:vercel`**. The install generates Prisma Client. The build first checks production environment values, then applies Prisma migrations, then builds Next.js. The migration role needs schema creation permissions. Missing variables or a localhost login URL stop the build before any migration runs.
 5. Deploy when ready, then test registration, sign-in, room creation, joining from another browser profile, messages, and leaving. Redeploy after changing environment variables or the production domain.
@@ -46,7 +77,7 @@ The `.vercelignore` file excludes local environment files, JSON data, caches, te
 
 The included daily cleanup job uses `CRON_SECRET` automatically on Vercel. Live streams reconnect after 25 seconds, within the route's 60-second limit. No JSON import or password reset is part of deployment.
 
-Publishing requires a connected Vercel account and a source repository or CLI deployment. Adding a database URL locally does not deploy the app. `npm run db:check` checks connectivity without changing database records.
+Share the production domain from **Project Settings > Domains**. If visitors see a Vercel login or private deployment screen, check **Settings > Deployment Protection**: Standard Protection leaves the production domain public while protecting generated deployment URLs. Set `NEXTAUTH_URL` to the same production origin and redeploy after changing it. `npm run db:check` checks connectivity without changing database records.
 
 ## Operation
 
